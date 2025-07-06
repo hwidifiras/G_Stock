@@ -1,0 +1,22 @@
+{
+  "build": {
+    "appId": "com.stockease.app",
+    "productName": "StockEase",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": ["portable", "nsis"]
+    },
+    "linux": {
+      "target": ["AppImage", "deb"]
+    },
+    "mac": {
+      "target": ["dmg"]
+    }
+  }
+}
