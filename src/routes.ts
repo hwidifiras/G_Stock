@@ -16,11 +16,15 @@ const routes: RouteItem[] = [
   },
   {
     name: 'Mouvements',
-    path: '/movements',
+    path: '/stock-movements',
   },
   {
     name: 'Rapports',
     path: '/reports',
+  },
+  {
+    name: 'Paramètres',
+    path: '/settings',
   },
 ]
 
