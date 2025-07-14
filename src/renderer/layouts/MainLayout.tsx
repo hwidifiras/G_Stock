@@ -1,4 +1,4 @@
-import { Box, Flex } from '@chakra-ui/react'
+import { Box, Flex, useColorModeValue } from '@chakra-ui/react'
 import { useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import SimpleSidebar from '../components/SimpleSidebar'
@@ -20,8 +20,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const [mini, setMini] = useState(false)
   const pageTitle = getPageTitle(location.pathname)
 
+  const mainBg = useColorModeValue('gray.50', 'navy.800');
   return (
-    <Flex h="100vh" bg="gray.50">
+    <Flex h="100vh" bg={mainBg}>
       {/* Sidebar */}
       <SimpleSidebar mini={mini} />
 

@@ -18,6 +18,7 @@ import {
   AlertDescription
 } from '@chakra-ui/react'
 import { useState } from 'react'
+import { useColorMode } from '@chakra-ui/react'
 import Card from '../components/Card'
 
 export default function Settings() {
@@ -25,6 +26,16 @@ export default function Settings() {
   const [autoBackup, setAutoBackup] = useState(false)
   const [theme, setTheme] = useState('light')
   const [language, setLanguage] = useState('fr')
+  const { colorMode, setColorMode } = useColorMode();
+
+  // Sync Chakra color mode with theme select
+  const handleThemeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const value = e.target.value;
+    setTheme(value);
+    if (value === 'light') setColorMode('light');
+    else if (value === 'dark') setColorMode('dark');
+    else if (value === 'auto') setColorMode(window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  };
 
   const cardBg = useColorModeValue("white", "navy.700")
   const textColor = useColorModeValue("secondaryGray.900", "white")
@@ -64,10 +75,10 @@ export default function Settings() {
 
             <HStack justify="space-between">
               <FormLabel mb={0}>Thème</FormLabel>
-              <Select 
-                maxW="200px" 
-                value={theme} 
-                onChange={(e) => setTheme(e.target.value)}
+              <Select
+                maxW="200px"
+                value={theme}
+                onChange={handleThemeChange}
               >
                 <option value="light">Clair</option>
                 <option value="dark">Sombre</option>

@@ -31,6 +31,7 @@ export default function Dashboard() {
   const textColor = useColorModeValue("secondaryGray.900", "white")
   const cardBg = useColorModeValue("white", "navy.700")
   const iconBoxBg = useColorModeValue("brand.500", "brand.400")
+  const mainBg = useColorModeValue("gray.50", "navy.800")
 
   const handleNavigate = (path: string) => {
     navigate(path)
@@ -117,14 +118,12 @@ export default function Dashboard() {
   }
 
   return (
-    <Box>
+    <Box bg={mainBg} minH="100vh" w="100%">
       <Heading size="lg" mb={6} color={textColor}>
         Tableau de Bord
       </Heading>
-      
       {/* Quick Actions */}
       <DashboardActions onNavigate={handleNavigate} />
-      
       {/* Statistics Cards */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing="20px" mb="20px" mt="20px">
         <MiniStatistics
@@ -145,7 +144,6 @@ export default function Dashboard() {
           value="1,247"
           growth="+12%"
         />
-        
         <MiniStatistics
           startContent={
             <Flex
@@ -164,7 +162,6 @@ export default function Dashboard() {
           value="€184,750"
           growth="+8.2%"
         />
-        
         <MiniStatistics
           startContent={
             <Flex
@@ -172,7 +169,7 @@ export default function Dashboard() {
               h="56px"
               align="center"
               justify="center"
-              bg="orange.400"
+              bg={useColorModeValue("orange.400", "orange.300")}
               borderRadius="12px"
               color="white"
             >
@@ -183,7 +180,6 @@ export default function Dashboard() {
           value="23"
           growth="-15%"
         />
-        
         <MiniStatistics
           startContent={
             <Flex
@@ -191,7 +187,7 @@ export default function Dashboard() {
               h="56px"
               align="center"
               justify="center"
-              bg="green.400"
+              bg={useColorModeValue("green.400", "green.300")}
               borderRadius="12px"
               color="white"
             >
@@ -203,7 +199,6 @@ export default function Dashboard() {
           growth="+23%"
         />
       </SimpleGrid>
-
       {/* Charts and Activity Section */}
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap="20px" mb="20px">
         {/* Charts Section */}
@@ -221,7 +216,6 @@ export default function Dashboard() {
               />
             </Box>
           </Card>
-
           {/* Stock Status Distribution */}
           <Card bg={cardBg} p="20px">
             <Text fontSize="lg" fontWeight="bold" mb="20px" color={textColor}>
@@ -236,14 +230,12 @@ export default function Dashboard() {
             </Box>
           </Card>
         </SimpleGrid>
-
         {/* Recent Activity and Alerts */}
         <VStack spacing="20px">
           <RecentActivity maxItems={6} />
           <InventoryAlerts maxItems={4} />
         </VStack>
       </Grid>
-
       {/* Category Distribution */}
       <Card bg={cardBg} p="20px">
         <Text fontSize="lg" fontWeight="bold" mb="20px" color={textColor}>

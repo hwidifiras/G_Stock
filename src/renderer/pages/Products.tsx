@@ -1,4 +1,4 @@
-import { Box, Button, Heading, Table, Thead, Tbody, Tr, Th, Td, HStack, useDisclosure, Badge } from '@chakra-ui/react'
+import { Box, Button, Heading, Table, Thead, Tbody, Tr, Th, Td, HStack, useDisclosure, Badge, useColorModeValue } from '@chakra-ui/react'
 import { useState } from 'react'
 import Card from '../components/Card'
 import ProductForm from '../components/ProductForm'
@@ -53,6 +53,7 @@ export default function Products() {
     return <Badge colorScheme="green">En stock</Badge>
   }
 
+  const cardBg = useColorModeValue('white', 'navy.700');
   return (
     <Box>
       <HStack justify="space-between" mb={6}>
@@ -62,7 +63,7 @@ export default function Products() {
         </Button>
       </HStack>
 
-      <Card bg="white" rounded="lg" shadow="sm" overflow="hidden">
+      <Card bg={cardBg} rounded="lg" shadow="sm" overflow="hidden">
         <Table>
           <Thead>
             <Tr>
