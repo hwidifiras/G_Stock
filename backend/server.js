@@ -170,10 +170,13 @@ if (require.main === module) {
       
       // Close database connection
       const mongoose = require('mongoose');
-      mongoose.connection.close(() => {
+      mongoose.connection.close().then(() => {
         console.log('✅ MongoDB connection closed.');
         console.log('👋 Graceful shutdown completed.');
         process.exit(0);
+      }).catch((err) => {
+        console.error('❌ Error closing MongoDB connection:', err.message);
+        process.exit(1);
       });
     });
 
