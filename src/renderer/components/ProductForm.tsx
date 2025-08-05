@@ -69,10 +69,12 @@ export default function ProductForm({ isOpen, onClose, onSave, product }: Produc
   const toast = useToast()
   const [errors, setErrors] = useState<Record<string, string>>({})
 
-  const handleInputChange = (field: keyof Product) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    let value: any = e.target.value
-    if (field === 'stock' || field === 'price' || field === 'minStock') value = Number(value)
-    setFormData(prev => ({ ...prev, [field]: value }))
+  const handleInputChange = (field: keyof Product) => (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
+  ) => {
+    let value: any = e.target.value;
+    if (field === 'stock' || field === 'price' || field === 'minStock') value = Number(value);
+    setFormData(prev => ({ ...prev, [field]: value }));
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
