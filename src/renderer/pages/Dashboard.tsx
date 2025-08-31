@@ -7,7 +7,12 @@ import {
   Icon,
   useColorModeValue,
   Grid,
-  VStack
+  VStack,
+  Spinner,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription
 } from '@chakra-ui/react'
 import { 
   MdInventory, 
@@ -16,6 +21,7 @@ import {
   MdAttachMoney
 } from 'react-icons/md'
 import { useNavigate } from 'react-router-dom'
+import { useDashboardAnalytics, useMovementsAnalytics } from '../hooks/useAnalytics'
 import MiniStatistics from '../components/MiniStatistics'
 import Card from '../components/Card'
 import LineChart from '../components/LineChart'
@@ -33,22 +39,15 @@ export default function Dashboard() {
   const iconBoxBg = useColorModeValue("brand.500", "brand.400")
   const mainBg = useColorModeValue("gray.50", "navy.800")
 
+  // Fetch real analytics data
+  const { data: dashboardData, loading: dashboardLoading, error: dashboardError } = useDashboardAnalytics()
+  const { data: movementsData, loading: movementsLoading, error: movementsError } = useMovementsAnalytics('7d')
+
   const handleNavigate = (path: string) => {
     navigate(path)
   }
 
-  // Mock data for charts
-  const stockMovementData = [
-    {
-      name: "Entrées",
-      data: [44, 55, 57, 56, 61, 58, 63, 60, 66, 72, 68, 70]
-    },
-    {
-      name: "Sorties", 
-      data: [76, 85, 101, 98, 87, 105, 91, 114, 94, 86, 115, 108]
-    }
-  ]
-
+  // Chart options
   const stockMovementOptions: ApexOptions = {
     chart: {
       type: 'line',
@@ -60,7 +59,7 @@ export default function Dashboard() {
       width: 3
     },
     xaxis: {
-      categories: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+      categories: movementsData?.categories || ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul']
     },
     tooltip: {
       theme: 'light'
@@ -72,12 +71,10 @@ export default function Dashboard() {
     }
   }
 
-  const categoryDistributionData = [
-    {
-      name: "Quantités par Catégorie",
-      data: [150, 230, 180, 120, 90, 75]
-    }
-  ]
+  const categoryDistributionData = dashboardData?.categoryDistribution ? [{
+    name: "Quantités par Catégorie",
+    data: dashboardData.categoryDistribution.map(cat => cat.totalQuantity)
+  }] : []
 
   const categoryDistributionOptions: ApexOptions = {
     chart: {
@@ -86,7 +83,7 @@ export default function Dashboard() {
     },
     colors: ['#4285F4'],
     xaxis: {
-      categories: ['Électronique', 'Vêtements', 'Maison', 'Sports', 'Livres', 'Jouets']
+      categories: dashboardData?.categoryDistribution?.map(cat => cat._id) || []
     },
     plotOptions: {
       bar: {
@@ -97,14 +94,18 @@ export default function Dashboard() {
     }
   }
 
-  const stockStatusData = [45, 25, 15, 15] // En stock, Stock faible, Rupture, Commandé
+  const stockStatusData = dashboardData?.stockStatus ? [
+    dashboardData.stockStatus.inStock,
+    dashboardData.stockStatus.lowStock,
+    dashboardData.stockStatus.outOfStock
+  ] : []
 
   const stockStatusOptions: ApexOptions = {
     chart: {
       type: 'donut'
     },
-    colors: ['#22C55E', '#F59E0B', '#EF4444', '#3B82F6'],
-    labels: ['En Stock', 'Stock Faible', 'Rupture', 'Commandé'],
+    colors: ['#22C55E', '#F59E0B', '#EF4444'],
+    labels: ['En Stock', 'Stock Faible', 'Rupture'],
     legend: {
       position: 'bottom'
     },
@@ -117,13 +118,44 @@ export default function Dashboard() {
     }
   }
 
+  // Loading state
+  if (dashboardLoading) {
+    return (
+      <Box bg={mainBg} minH="100vh" w="100%" display="flex" alignItems="center" justifyContent="center">
+        <VStack spacing={4}>
+          <Spinner size="xl" color="brand.500" />
+          <Text color={textColor}>Chargement des données...</Text>
+        </VStack>
+      </Box>
+    )
+  }
+
+  // Error state
+  if (dashboardError || movementsError) {
+    return (
+      <Box bg={mainBg} minH="100vh" w="100%" p={6}>
+        <Alert status="error">
+          <AlertIcon />
+          <Box>
+            <AlertTitle>Erreur de chargement!</AlertTitle>
+            <AlertDescription>
+              {dashboardError || movementsError}
+            </AlertDescription>
+          </Box>
+        </Alert>
+      </Box>
+    )
+  }
+
   return (
     <Box bg={mainBg} minH="100vh" w="100%">
       <Heading size="lg" mb={6} color={textColor}>
         Tableau de Bord
       </Heading>
+      
       {/* Quick Actions */}
       <DashboardActions onNavigate={handleNavigate} />
+      
       {/* Statistics Cards */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing="20px" mb="20px" mt="20px">
         <MiniStatistics
@@ -140,9 +172,9 @@ export default function Dashboard() {
               <Icon as={MdInventory} width="28px" height="28px" />
             </Flex>
           }
-          name="Total Produits"
-          value="1,247"
-          growth="+12%"
+          name={dashboardData?.totalProducts?.label || "Total Produits"}
+          value={dashboardData?.totalProducts?.value?.toString() || "0"}
+          growth={dashboardData?.totalProducts?.growth || "0%"}
         />
         <MiniStatistics
           startContent={
@@ -158,9 +190,9 @@ export default function Dashboard() {
               <Icon as={MdAttachMoney} width="28px" height="28px" />
             </Flex>
           }
-          name="Valeur Totale"
-          value="€184,750"
-          growth="+8.2%"
+          name={dashboardData?.totalValue?.label || "Valeur Totale"}
+          value={dashboardData?.totalValue?.value || "€0"}
+          growth={dashboardData?.totalValue?.growth || "0%"}
         />
         <MiniStatistics
           startContent={
@@ -176,9 +208,9 @@ export default function Dashboard() {
               <Icon as={MdWarning} width="28px" height="28px" />
             </Flex>
           }
-          name="Stock Faible"
-          value="23"
-          growth="-15%"
+          name={dashboardData?.lowStock?.label || "Stock Faible"}
+          value={dashboardData?.lowStock?.value?.toString() || "0"}
+          growth={dashboardData?.lowStock?.growth || "0%"}
         />
         <MiniStatistics
           startContent={
@@ -194,11 +226,12 @@ export default function Dashboard() {
               <Icon as={MdTrendingUp} width="28px" height="28px" />
             </Flex>
           }
-          name="Mouvements"
-          value="856"
-          growth="+23%"
+          name={dashboardData?.totalQuantity?.label || "Stock Total"}
+          value={dashboardData?.totalQuantity?.value?.toString() || "0"}
+          growth={dashboardData?.totalQuantity?.growth || "0%"}
         />
       </SimpleGrid>
+      
       {/* Charts and Activity Section */}
       <Grid templateColumns={{ base: "1fr", lg: "2fr 1fr" }} gap="20px" mb="20px">
         {/* Charts Section */}
@@ -206,47 +239,68 @@ export default function Dashboard() {
           {/* Stock Movement Chart */}
           <Card bg={cardBg} p="20px">
             <Text fontSize="lg" fontWeight="bold" mb="20px" color={textColor}>
-              Mouvements de Stock (2024)
+              Mouvements de Stock {movementsLoading && <Spinner size="sm" ml={2} />}
             </Text>
             <Box h="300px">
-              <LineChart
-                chartData={stockMovementData}
-                chartOptions={stockMovementOptions}
-                height="100%"
-              />
+              {movementsData?.stockMovements ? (
+                <LineChart
+                  chartData={movementsData.stockMovements}
+                  chartOptions={stockMovementOptions}
+                  height="100%"
+                />
+              ) : (
+                <Flex h="100%" alignItems="center" justifyContent="center">
+                  <Text color="gray.500">Aucune donnée de mouvement disponible</Text>
+                </Flex>
+              )}
             </Box>
           </Card>
+          
           {/* Stock Status Distribution */}
           <Card bg={cardBg} p="20px">
             <Text fontSize="lg" fontWeight="bold" mb="20px" color={textColor}>
               Statut du Stock
             </Text>
             <Box h="300px">
-              <DonutChart
-                chartData={stockStatusData}
-                chartOptions={stockStatusOptions}
-                height="100%"
-              />
+              {stockStatusData.length > 0 ? (
+                <DonutChart
+                  chartData={stockStatusData}
+                  chartOptions={stockStatusOptions}
+                  height="100%"
+                />
+              ) : (
+                <Flex h="100%" alignItems="center" justifyContent="center">
+                  <Text color="gray.500">Aucune donnée de statut disponible</Text>
+                </Flex>
+              )}
             </Box>
           </Card>
         </SimpleGrid>
+        
         {/* Recent Activity and Alerts */}
         <VStack spacing="20px">
           <RecentActivity maxItems={6} />
           <InventoryAlerts maxItems={4} />
         </VStack>
       </Grid>
+      
       {/* Category Distribution */}
       <Card bg={cardBg} p="20px">
         <Text fontSize="lg" fontWeight="bold" mb="20px" color={textColor}>
           Distribution par Catégorie
         </Text>
         <Box h="350px">
-          <BarChart
-            chartData={categoryDistributionData}
-            chartOptions={categoryDistributionOptions}
-            height="100%"
-          />
+          {categoryDistributionData.length > 0 ? (
+            <BarChart
+              chartData={categoryDistributionData}
+              chartOptions={categoryDistributionOptions}
+              height="100%"
+            />
+          ) : (
+            <Flex h="100%" alignItems="center" justifyContent="center">
+              <Text color="gray.500">Aucune donnée de catégorie disponible</Text>
+            </Flex>
+          )}
         </Box>
       </Card>
     </Box>

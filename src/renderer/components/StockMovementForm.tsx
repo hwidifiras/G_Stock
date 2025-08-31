@@ -20,63 +20,66 @@ import {
   FormControl,
   FormLabel,
   FormErrorMessage,
-  useToast
+  useToast,
+  Text,
+  Badge
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
-
-interface StockMovement {
-  id?: string
-  type: 'entry' | 'exit' | 'adjustment'
-  productId: string
-  quantity: number
-  unitPrice?: number
-  reason: string
-  reference?: string
-}
+import { useProducts } from '../hooks/useProducts'
+import { useCreateMovement, useUpdateMovement, type CreateMovementData } from '../hooks/useStockMovements'
 
 interface StockMovementFormProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (movement: StockMovement) => void
-  movement?: StockMovement
+  movement?: any // Any existing movement to edit
 }
 
 export default function StockMovementForm({ 
   isOpen, 
   onClose, 
-  onSave, 
   movement 
 }: StockMovementFormProps) {
   const toast = useToast()
-  const [formData, setFormData] = useState<StockMovement>({
-    type: 'entry',
+  
+  // Fetch products for dropdown
+  const { data: productsResponse } = useProducts()
+  const products = productsResponse?.data || []
+  
+  // API mutations
+  const createMovement = useCreateMovement()
+  const updateMovement = useUpdateMovement()
+  
+  const [formData, setFormData] = useState<CreateMovementData>({
     productId: '',
+    type: 'entry',
     quantity: 0,
+    reason: 'purchase',
     unitPrice: 0,
-    reason: '',
+    description: '',
     reference: ''
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
-
-  // Mock products for dropdown
-  const mockProducts = [
-    { id: 'PROD001', name: 'iPhone 14 Pro', currentStock: 15 },
-    { id: 'PROD002', name: 'Samsung Galaxy S23', currentStock: 8 },
-    { id: 'PROD003', name: 'MacBook Air M2', currentStock: 5 },
-    { id: 'PROD004', name: 'AirPods Pro 2', currentStock: 32 },
-    { id: 'PROD005', name: 'iPad Pro 12.9"', currentStock: 12 }
-  ]
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
     if (movement) {
-      setFormData(movement)
+      setFormData({
+        productId: movement.product?.id || '',
+        type: movement.type,
+        quantity: Math.abs(movement.quantity),
+        reason: movement.reason,
+        unitPrice: movement.unitPrice || 0,
+        description: movement.description || '',
+        reference: movement.reference || ''
+      })
     } else {
       setFormData({
-        type: 'entry',
         productId: '',
+        type: 'entry',
         quantity: 0,
+        reason: 'purchase',
         unitPrice: 0,
-        reason: '',
+        description: '',
         reference: ''
       })
     }
@@ -95,9 +98,9 @@ export default function StockMovementForm({
     }
 
     if (formData.type === 'exit') {
-      const product = mockProducts.find(p => p.id === formData.productId)
-      if (product && Math.abs(formData.quantity) > product.currentStock) {
-        newErrors.quantity = `Stock insuffisant (disponible: ${product.currentStock})`
+      const product = products.find(p => p.id === formData.productId)
+      if (product && Math.abs(formData.quantity) > product.quantity) {
+        newErrors.quantity = `Stock insuffisant (disponible: ${product.quantity})`
       }
     }
 
@@ -113,25 +116,44 @@ export default function StockMovementForm({
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
-    if (validateForm()) {
-      const movementData = {
+  const handleSubmit = async () => {
+    if (!validateForm()) return
+
+    setIsLoading(true)
+    try {
+      const movementData: CreateMovementData = {
         ...formData,
-        quantity: formData.type === 'exit' ? -Math.abs(formData.quantity) : Math.abs(formData.quantity),
-        unitPrice: formData.type === 'adjustment' ? 0 : formData.unitPrice
+        quantity: formData.type === 'exit' ? -Math.abs(formData.quantity) : 
+                 formData.type === 'adjustment' ? formData.quantity : 
+                 Math.abs(formData.quantity)
       }
       
-      onSave(movementData)
-      onClose()
+      if (movement?.id) {
+        await updateMovement.mutateAsync({ id: movement.id, data: movementData })
+      } else {
+        await createMovement.mutateAsync(movementData)
+      }
       
-      toast({
-        title: 'Mouvement enregistré',
-        description: `Le mouvement de stock a été ${movement ? 'modifié' : 'ajouté'} avec succès.`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      })
+      onClose()
+    } catch (error) {
+      console.error('Error saving movement:', error)
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  const handleClose = () => {
+    setFormData({
+      productId: '',
+      type: 'entry',
+      quantity: 0,
+      reason: 'purchase',
+      unitPrice: 0,
+      description: '',
+      reference: ''
+    })
+    setErrors({})
+    onClose()
   }
 
   const getQuantityLabel = () => {
@@ -143,6 +165,11 @@ export default function StockMovementForm({
       default:
         return 'Ajustement (+/-)'
     }
+  }
+
+  const getSelectedProductStock = () => {
+    const product = products.find(p => p.id === formData.productId)
+    return product?.quantity || 0
   }
 
   const getReasonPlaceholder = () => {
@@ -191,12 +218,18 @@ export default function StockMovementForm({
                 onChange={(e) => setFormData(prev => ({ ...prev, productId: e.target.value }))}
                 placeholder="Sélectionnez un produit"
               >
-                {mockProducts.map(product => (
+                {products.map(product => (
                   <option key={product.id} value={product.id}>
-                    {product.name} (Stock: {product.currentStock})
+                    {product.name} (Stock: {product.quantity})
                   </option>
                 ))}
               </Select>
+              {formData.productId && (
+                <Text fontSize="sm" color="gray.600" mt={1}>
+                  Stock actuel: {getSelectedProductStock()} • 
+                  Catégorie: {products.find(p => p.id === formData.productId)?.category}
+                </Text>
+              )}
               <FormErrorMessage>{errors.productId}</FormErrorMessage>
             </FormControl>
 
@@ -254,26 +287,63 @@ export default function StockMovementForm({
               <FormErrorMessage>{errors.reference}</FormErrorMessage>
             </FormControl>
 
+            <FormControl isInvalid={!!errors.description}>
+              <FormLabel>Description (optionnel)</FormLabel>
+              <Input
+                placeholder="Description supplémentaire..."
+                value={formData.description || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              />
+              <FormErrorMessage>{errors.description}</FormErrorMessage>
+            </FormControl>
+
             <FormControl isRequired isInvalid={!!errors.reason}>
-              <FormLabel>Motif / Commentaire</FormLabel>
-              <Textarea
+              <FormLabel>Motif</FormLabel>
+              <Select
                 value={formData.reason}
                 onChange={(e) => setFormData(prev => ({ ...prev, reason: e.target.value }))}
-                placeholder={getReasonPlaceholder()}
-                rows={3}
-              />
+                placeholder="Sélectionnez un motif"
+              >
+                {formData.type === 'entry' && (
+                  <>
+                    <option value="purchase">Achat fournisseur</option>
+                    <option value="return">Retour client</option>
+                    <option value="initial_stock">Stock initial</option>
+                    <option value="other">Autre</option>
+                  </>
+                )}
+                {formData.type === 'exit' && (
+                  <>
+                    <option value="sale">Vente</option>
+                    <option value="damage">Dommage</option>
+                    <option value="loss">Perte</option>
+                    <option value="theft">Vol</option>
+                    <option value="expired">Expiré</option>
+                    <option value="other">Autre</option>
+                  </>
+                )}
+                {formData.type === 'adjustment' && (
+                  <>
+                    <option value="correction">Correction inventaire</option>
+                    <option value="quality_control">Contrôle qualité</option>
+                    <option value="other">Autre</option>
+                  </>
+                )}
+              </Select>
               <FormErrorMessage>{errors.reason}</FormErrorMessage>
             </FormControl>
           </VStack>
         </ModalBody>
 
         <ModalFooter>
-          <Button variant="ghost" mr={3} onClick={onClose}>
+          <Button variant="ghost" mr={3} onClick={handleClose} disabled={isLoading}>
             Annuler
           </Button>
           <Button 
             colorScheme="brand" 
             onClick={handleSubmit}
+            isLoading={isLoading}
+            loadingText={movement ? 'Modification...' : 'Enregistrement...'}
           >
             {movement ? 'Modifier' : 'Enregistrer'}
           </Button>

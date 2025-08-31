@@ -22,7 +22,17 @@ import {
   IconButton,
   useDisclosure,
   Flex,
-  Icon
+  Icon,
+  Spinner,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow
 } from '@chakra-ui/react'
 import { 
   MdAdd, 
@@ -32,45 +42,61 @@ import {
   MdDelete,
   MdArrowUpward,
   MdArrowDownward,
-  MdInventory
+  MdInventory,
+  MdTrendingUp,
+  MdTrendingDown,
+  MdSwapHoriz
 } from 'react-icons/md'
 import { useState } from 'react'
 import Card from '../components/Card'
 import MiniStatistics from '../components/MiniStatistics'
 import StockMovementForm from '../components/StockMovementForm'
-
-interface StockMovement {
-  id: string
-  date: string
-  type: 'entry' | 'exit' | 'adjustment'
-  product: string
-  productId: string
-  quantity: number
-  unitPrice?: number
-  totalValue: number
-  reason: string
-  user: string
-  reference?: string
-}
+import { 
+  useMovements, 
+  useMovementAnalytics, 
+  useDeleteMovement,
+  type StockMovement,
+  type MovementFilters 
+} from '../hooks/useStockMovements'
 
 export default function StockMovements() {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterType, setFilterType] = useState('all')
   const [filterPeriod, setFilterPeriod] = useState('all')
-  const [selectedMovement, setSelectedMovement] = useState<StockMovement | undefined>(undefined)
+  const [selectedMovement, setSelectedMovement] = useState<any>(undefined)
 
   const cardBg = useColorModeValue("white", "navy.700")
   const textColor = useColorModeValue("secondaryGray.900", "white")
   const borderColor = useColorModeValue("gray.200", "navy.600")
   const iconBoxBg = useColorModeValue("brand.500", "brand.400")
 
-  const handleSaveMovement = (movement: any) => {
-    console.log('Saving movement:', movement)
-    // Here you would typically save to your backend/database
+  // Build filters for API
+  const filters: MovementFilters = {
+    page: 1,
+    limit: 20,
+    ...(filterType !== 'all' && { type: filterType }),
+    ...(searchTerm && { productId: searchTerm }) // Simplified search
   }
 
-  const handleEditMovement = (movement: StockMovement) => {
+  // Get movements data
+  const { 
+    data: movementsData, 
+    isLoading: movementsLoading, 
+    error: movementsError 
+  } = useMovements(filters)
+
+  // Get analytics data
+  const { 
+    data: analyticsData, 
+    isLoading: analyticsLoading, 
+    error: analyticsError 
+  } = useMovementAnalytics('30d')
+
+  // Delete mutation
+  const deleteMovement = useDeleteMovement()
+
+  const handleEditMovement = (movement: any) => {
     setSelectedMovement(movement)
     onOpen()
   }
@@ -80,72 +106,59 @@ export default function StockMovements() {
     onOpen()
   }
 
-  // Mock data for stock movements
-  const mockMovements: StockMovement[] = [
-    {
-      id: '1',
-      date: '2024-12-07 10:30',
-      type: 'entry',
-      product: 'iPhone 14 Pro',
-      productId: 'PROD001',
-      quantity: 25,
-      unitPrice: 999.99,
-      totalValue: 24999.75,
-      reason: 'Réapprovisionnement fournisseur',
-      user: 'Admin',
-      reference: 'PO-2024-001'
-    },
-    {
-      id: '2',
-      date: '2024-12-07 09:15',
-      type: 'exit',
-      product: 'Samsung Galaxy S23',
-      productId: 'PROD002',
-      quantity: 3,
-      unitPrice: 799.99,
-      totalValue: 2399.97,
-      reason: 'Vente client',
-      user: 'Vendeur1',
-      reference: 'SO-2024-045'
-    },
-    {
-      id: '3',
-      date: '2024-12-06 16:45',
-      type: 'adjustment',
-      product: 'MacBook Air M2',
-      productId: 'PROD003',
-      quantity: -2,
-      totalValue: 0,
-      reason: 'Correction inventaire',
-      user: 'Admin'
-    },
-    {
-      id: '4',
-      date: '2024-12-06 14:20',
-      type: 'entry',
-      product: 'AirPods Pro 2',
-      productId: 'PROD004',
-      quantity: 50,
-      unitPrice: 249.99,
-      totalValue: 12499.50,
-      reason: 'Nouvelle commande',
-      user: 'Admin',
-      reference: 'PO-2024-002'
-    },
-    {
-      id: '5',
-      date: '2024-12-06 11:30',
-      type: 'exit',
-      product: 'iPad Pro 12.9"',
-      productId: 'PROD005',
-      quantity: 1,
-      unitPrice: 1199.99,
-      totalValue: 1199.99,
-      reason: 'Vente en ligne',
-      user: 'Vendeur2',
-      reference: 'SO-2024-046'
+  const handleDeleteMovement = (id: string) => {
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce mouvement?')) {
+      deleteMovement.mutate({ id })
     }
-  ]
+  }
+
+  // Format date helper
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    })
+  }
+
+  // Loading state
+  if (movementsLoading || analyticsLoading) {
+    return (
+      <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
+        <Flex justify="center" align="center" h="400px">
+          <Spinner size="xl" color="brand.500" />
+          <Text ml={4}>Chargement des mouvements de stock...</Text>
+        </Flex>
+      </Box>
+    )
+  }
+
+  // Error state
+  if (movementsError || analyticsError) {
+    return (
+      <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
+        <Alert status="error">
+          <AlertIcon />
+          <AlertTitle>Erreur!</AlertTitle>
+          <AlertDescription>
+            Impossible de charger les données des mouvements de stock.
+          </AlertDescription>
+        </Alert>
+      </Box>
+    )
+  }
+
+  const movements = movementsData?.data?.movements || []
+  const pagination = movementsData?.data?.pagination || {}
+  const analytics = analyticsData?.data || {}
+
+  // Calculate analytics summaries
+  const totalMovements = analytics.summary?.totalMovements || 0
+  const totalValue = analytics.summary?.totalValue || 0
+  const entriesCount = analytics.summary?.byType?.entry?.count || 0
+  const exitsCount = analytics.summary?.byType?.exit?.count || 0
 
   const getMovementTypeIcon = (type: string) => {
     switch (type) {
@@ -153,6 +166,10 @@ export default function StockMovements() {
         return MdArrowUpward
       case 'exit':
         return MdArrowDownward
+      case 'adjustment':
+        return MdSwapHoriz
+      case 'transfer':
+        return MdInventory
       default:
         return MdInventory
     }
@@ -164,8 +181,12 @@ export default function StockMovements() {
         return 'green'
       case 'exit':
         return 'red'
-      default:
+      case 'adjustment':
         return 'blue'
+      case 'transfer':
+        return 'purple'
+      default:
+        return 'gray'
     }
   }
 
@@ -175,21 +196,69 @@ export default function StockMovements() {
         return 'Entrée'
       case 'exit':
         return 'Sortie'
-      default:
+      case 'adjustment':
         return 'Ajustement'
+      case 'transfer':
+        return 'Transfert'
+      default:
+        return 'Inconnu'
     }
   }
 
-  const filteredMovements = mockMovements.filter(movement => {
-    const matchesSearch = movement.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         movement.reason.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         movement.reference?.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesType = filterType === 'all' || movement.type === filterType
-    return matchesSearch && matchesType
-  })
-
   return (
-    <Box>
+    <Box pt={{ base: "130px", md: "80px", xl: "80px" }}>
+      {/* Statistics Cards */}
+      <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} gap='20px' mb='20px'>
+        <MiniStatistics
+          startContent={
+            <Icon
+              w='56px'
+              h='56px'
+              as={MdTrendingUp}
+              color={iconBoxBg}
+            />
+          }
+          name='Total Mouvements'
+          value={totalMovements.toLocaleString()}
+        />
+        <MiniStatistics
+          startContent={
+            <Icon
+              w='56px'
+              h='56px'
+              as={MdArrowUpward}
+              color='green.500'
+            />
+          }
+          name='Entrées'
+          value={entriesCount.toLocaleString()}
+        />
+        <MiniStatistics
+          startContent={
+            <Icon
+              w='56px'
+              h='56px'
+              as={MdArrowDownward}
+              color='red.500'
+            />
+          }
+          name='Sorties'
+          value={exitsCount.toLocaleString()}
+        />
+        <MiniStatistics
+          startContent={
+            <Icon
+              w='56px'
+              h='56px'
+              as={MdTrendingDown}
+              color='purple.500'
+            />
+          }
+          name='Valeur Total'
+          value={`€${totalValue.toLocaleString('fr-FR', { minimumFractionDigits: 2 })}`}
+        />
+      </SimpleGrid>
+
       <Flex justify="space-between" align="center" mb={6}>
         <Heading size="lg" color={textColor}>
           Mouvements de Stock
@@ -327,7 +396,7 @@ export default function StockMovements() {
           </HStack>
           
           <Text fontSize="sm" color="gray.500">
-            {filteredMovements.length} mouvement(s) trouvé(s)
+            {movements.length} mouvement(s) trouvé(s)
           </Text>
         </VStack>
       </Card>
@@ -349,15 +418,15 @@ export default function StockMovements() {
               </Tr>
             </Thead>
             <Tbody>
-              {filteredMovements.map((movement) => (
+              {movements.map((movement: StockMovement) => (
                 <Tr key={movement.id}>
                   <Td>
                     <VStack align="start" spacing="1px">
                       <Text fontSize="sm" fontWeight="500">
-                        {movement.date.split(' ')[0]}
+                        {formatDate(movement.movementDate).split(' ')[0]}
                       </Text>
                       <Text fontSize="xs" color="gray.500">
-                        {movement.date.split(' ')[1]}
+                        {formatDate(movement.movementDate).split(' ')[1]}
                       </Text>
                     </VStack>
                   </Td>
@@ -376,10 +445,10 @@ export default function StockMovements() {
                   <Td>
                     <VStack align="start" spacing="1px">
                       <Text fontSize="sm" fontWeight="500">
-                        {movement.product}
+                        {movement.product.name}
                       </Text>
                       <Text fontSize="xs" color="gray.500">
-                        {movement.productId}
+                        {movement.product.reference}
                       </Text>
                     </VStack>
                   </Td>
@@ -408,7 +477,7 @@ export default function StockMovements() {
                     </VStack>
                   </Td>
                   <Td>
-                    <Text fontSize="sm">{movement.user}</Text>
+                    <Text fontSize="sm">{movement.createdBy}</Text>
                   </Td>
                   <Td>
                     <HStack spacing="8px">
@@ -426,6 +495,7 @@ export default function StockMovements() {
                         size="sm"
                         variant="ghost"
                         colorScheme="red"
+                        onClick={() => handleDeleteMovement(movement.id)}
                       />
                     </HStack>
                   </Td>
@@ -435,7 +505,7 @@ export default function StockMovements() {
           </Table>
         </TableContainer>
         
-        {filteredMovements.length === 0 && (
+        {movements.length === 0 && (
           <Box textAlign="center" py="40px">
             <Text color="gray.500">Aucun mouvement trouvé</Text>
           </Box>
@@ -446,7 +516,6 @@ export default function StockMovements() {
       <StockMovementForm
         isOpen={isOpen}
         onClose={onClose}
-        onSave={handleSaveMovement}
         movement={selectedMovement}
       />
     </Box>

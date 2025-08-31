@@ -8,6 +8,9 @@ const router = express.Router();
 
 // Import route modules
 const productRoutes = require('./productRoutes');
+const analyticsRoutes = require('./analyticsRoutes');
+const stockMovementRoutes = require('./stockMovementRoutes');
+const settingsRoutes = require('./settingsRoutes');
 
 /**
  * API Routes Configuration
@@ -27,6 +30,15 @@ router.get('/health', (req, res) => {
 // Product routes - all product-related endpoints
 router.use('/products', productRoutes);
 
+// Stock Movement routes - inventory tracking and movements
+router.use('/movements', stockMovementRoutes);
+
+// Analytics routes - dashboard statistics and charts
+router.use('/analytics', analyticsRoutes);
+
+// Settings routes - system configuration and preferences
+router.use('/settings', settingsRoutes);
+
 // API documentation route
 router.get('/', (req, res) => {
   res.status(200).json({
@@ -43,6 +55,11 @@ router.get('/', (req, res) => {
         delete: 'DELETE /api/products/:id',
         lowStock: 'GET /api/products/low-stock',
         updateStock: 'PATCH /api/products/:id/stock'
+      },
+      analytics: {
+        dashboard: 'GET /api/analytics/dashboard',
+        movements: 'GET /api/analytics/movements',
+        activity: 'GET /api/analytics/activity'
       }
     }
   });

@@ -20,7 +20,12 @@ import {
   StatLabel,
   StatNumber,
   StatHelpText,
-  StatArrow
+  StatArrow,
+  Spinner,
+  Alert,
+  AlertIcon,
+  AlertTitle,
+  AlertDescription
 } from '@chakra-ui/react'
 import { 
   MdFileDownload, 
@@ -28,6 +33,7 @@ import {
   MdShare
 } from 'react-icons/md'
 import { useState } from 'react'
+import { useReportsAnalytics } from '../hooks/useAnalytics'
 import Card from '../components/Card'
 import LineChart from '../components/LineChart'
 import BarChart from '../components/BarChart'
@@ -36,21 +42,17 @@ import { ApexOptions } from 'apexcharts'
 
 export default function Reports() {
   const [reportType, setReportType] = useState('inventory')
-  const [dateRange, setDateRange] = useState('month')
+  const [dateRange, setDateRange] = useState('year')
   const [category, setCategory] = useState('all')
+
+  // Fetch real analytics data
+  const { data: reportsData, loading, error, refetch } = useReportsAnalytics(dateRange, category)
 
   const cardBg = useColorModeValue("white", "navy.700")
   const textColor = useColorModeValue("secondaryGray.900", "white")
   const borderColor = useColorModeValue("gray.200", "navy.600")
 
-  // Mock data for reports
-  const inventoryValueData = [
-    {
-      name: "Valeur Stock",
-      data: [120000, 125000, 118000, 132000, 128000, 135000, 142000, 138000, 145000, 150000, 148000, 155000]
-    }
-  ]
-
+  // Chart options using real data
   const inventoryValueOptions: ApexOptions = {
     chart: {
       type: 'line',
@@ -62,7 +64,7 @@ export default function Reports() {
       width: 3
     },
     xaxis: {
-      categories: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+      categories: reportsData?.inventoryValue?.categories || ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
     },
     yaxis: {
       labels: {
@@ -80,13 +82,6 @@ export default function Reports() {
     }
   }
 
-  const topProductsData = [
-    {
-      name: "Ventes (unités)",
-      data: [150, 120, 95, 85, 75, 65, 55, 45]
-    }
-  ]
-
   const topProductsOptions: ApexOptions = {
     chart: {
       type: 'bar',
@@ -94,7 +89,7 @@ export default function Reports() {
     },
     colors: ['#22C55E'],
     xaxis: {
-      categories: ['iPhone 14', 'Galaxy S23', 'MacBook Air', 'iPad Pro', 'AirPods Pro', 'Surface Pro', 'Watch Series', 'Pixel 7']
+      categories: reportsData?.topProducts?.categories || []
     },
     plotOptions: {
       bar: {
@@ -103,23 +98,60 @@ export default function Reports() {
       }
     }
   }
-
-  const categoryDistributionData = [245, 180, 120, 95, 75, 60]
   
   const categoryDistributionOptions: ApexOptions = {
     chart: {
       type: 'donut'
     },
     colors: ['#4285F4', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'],
-    labels: ['Électronique', 'Informatique', 'Audio', 'Accessoires', 'Gaming', 'Autres'],
+    labels: reportsData?.categoryDistribution?.labels || [],
     legend: {
       position: 'bottom'
     }
   }
 
-  const handleExportReport = (format: string) => {
+  // Loading state
+  if (loading) {
+    return (
+      <Box display="flex" alignItems="center" justifyContent="center" minH="400px">
+        <VStack spacing={4}>
+          <Spinner size="xl" color="brand.500" />
+          <Text color={textColor}>Chargement des rapports...</Text>
+        </VStack>
+      </Box>
+    )
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Box>
+        <Heading size="lg" mb={6} color={textColor}>
+          Rapports et Analyses
+        </Heading>
+        <Alert status="error">
+          <AlertIcon />
+          <Box>
+            <AlertTitle>Erreur de chargement!</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Box>
+        </Alert>
+      </Box>
+    )
+  }
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'EUR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(amount)
+  }
+
+  const handleExportReport = (format: 'excel' | 'pdf') => {
     console.log(`Exporting report as ${format}`)
-    // Here you would implement actual export functionality
+    // TODO: Implement export functionality
   }
 
   return (
@@ -214,7 +246,7 @@ export default function Reports() {
               <Card bg={cardBg} p="20px" border="1px solid" borderColor={borderColor}>
                 <Stat>
                   <StatLabel>Valeur totale du stock</StatLabel>
-                  <StatNumber>€155,240</StatNumber>
+                  <StatNumber>{formatCurrency(reportsData?.kpis?.totalValue || 0)}</StatNumber>
                   <StatHelpText>
                     <StatArrow type="increase" />
                     +8.2% ce mois
@@ -225,7 +257,7 @@ export default function Reports() {
               <Card bg={cardBg} p="20px" border="1px solid" borderColor={borderColor}>
                 <Stat>
                   <StatLabel>Rotation des stocks</StatLabel>
-                  <StatNumber>4.2x</StatNumber>
+                  <StatNumber>{reportsData?.kpis?.stockTurnover?.toFixed(1) || '0.0'}x</StatNumber>
                   <StatHelpText>
                     <StatArrow type="increase" />
                     +0.3x vs mois précédent
@@ -236,7 +268,7 @@ export default function Reports() {
               <Card bg={cardBg} p="20px" border="1px solid" borderColor={borderColor}>
                 <Stat>
                   <StatLabel>Marge brute moyenne</StatLabel>
-                  <StatNumber>28.5%</StatNumber>
+                  <StatNumber>{reportsData?.kpis?.profitMargin?.toFixed(1) || '0.0'}%</StatNumber>
                   <StatHelpText>
                     <StatArrow type="decrease" />
                     -1.2% vs objectif
@@ -246,11 +278,11 @@ export default function Reports() {
               
               <Card bg={cardBg} p="20px" border="1px solid" borderColor={borderColor}>
                 <Stat>
-                  <StatLabel>Produits en rupture</StatLabel>
-                  <StatNumber>7</StatNumber>
+                  <StatLabel>Produits en stock faible</StatLabel>
+                  <StatNumber>{reportsData?.kpis?.lowStockCount || 0}</StatNumber>
                   <StatHelpText>
                     <StatArrow type="decrease" />
-                    -3 vs semaine dernière
+                    Alerte stock
                   </StatHelpText>
                 </Stat>
               </Card>
@@ -264,7 +296,7 @@ export default function Reports() {
                 </Text>
                 <Box h="300px">
                   <LineChart
-                    chartData={inventoryValueData}
+                    chartData={reportsData?.inventoryValue?.data || []}
                     chartOptions={inventoryValueOptions}
                     height="100%"
                   />
@@ -277,7 +309,7 @@ export default function Reports() {
                 </Text>
                 <Box h="300px">
                   <DonutChart
-                    chartData={categoryDistributionData}
+                    chartData={reportsData?.categoryDistribution?.data || []}
                     chartOptions={categoryDistributionOptions}
                     height="100%"
                   />
@@ -294,7 +326,7 @@ export default function Reports() {
               </Text>
               <Box h="400px">
                 <BarChart
-                  chartData={topProductsData}
+                  chartData={reportsData?.topProducts?.data || []}
                   chartOptions={topProductsOptions}
                   height="100%"
                 />
