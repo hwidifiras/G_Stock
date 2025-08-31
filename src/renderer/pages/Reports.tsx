@@ -53,12 +53,19 @@ export default function Reports() {
   const borderColor = useColorModeValue("gray.200", "navy.600")
   const mutedTextColor = useColorModeValue("secondaryGray.600", "secondaryGray.400")
   const itemBg = useColorModeValue("gray.50", "navy.600")
+  
+  // Chart theme colors (actual hex values for ApexCharts)
+  const chartTextColor = useColorModeValue("#2D3748", "#FFFFFF")
+  const chartMutedColor = useColorModeValue("#718096", "#A0AEC0")
+  const gridColor = useColorModeValue("#e2e8f0", "#2D3748")
+  const tooltipTheme = useColorModeValue("light", "dark")
 
   // Chart options using real data
   const inventoryValueOptions: ApexOptions = {
     chart: {
       type: 'line',
       toolbar: { show: false },
+      background: 'transparent'
     },
     colors: ['#4285F4'],
     stroke: {
@@ -66,20 +73,39 @@ export default function Reports() {
       width: 3
     },
     xaxis: {
-      categories: reportsData?.inventoryValue?.categories || ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+      categories: reportsData?.inventoryValue?.categories || ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'],
+      labels: {
+        style: {
+          colors: chartMutedColor,
+          fontSize: '12px'
+        }
+      }
     },
     yaxis: {
       labels: {
+        style: {
+          colors: chartMutedColor,
+          fontSize: '12px'
+        },
         formatter: function (val) {
           return '€' + (val / 1000).toFixed(0) + 'k'
         }
       }
     },
+    grid: {
+      borderColor: gridColor
+    },
     tooltip: {
+      theme: tooltipTheme,
       y: {
         formatter: function (val) {
           return '€' + val.toLocaleString()
         }
+      }
+    },
+    legend: {
+      labels: {
+        colors: chartTextColor
       }
     }
   }
@@ -87,11 +113,32 @@ export default function Reports() {
   const topProductsOptions: ApexOptions = {
     chart: {
       type: 'bar',
-      toolbar: { show: false }
+      toolbar: { show: false },
+      background: 'transparent'
     },
     colors: ['#22C55E'],
     xaxis: {
-      categories: reportsData?.topProducts?.categories || []
+      categories: reportsData?.topProducts?.categories || [],
+      labels: {
+        style: {
+          colors: chartMutedColor,
+          fontSize: '12px'
+        }
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: chartMutedColor,
+          fontSize: '12px'
+        }
+      }
+    },
+    grid: {
+      borderColor: gridColor
+    },
+    tooltip: {
+      theme: tooltipTheme
     },
     plotOptions: {
       bar: {
@@ -103,12 +150,41 @@ export default function Reports() {
   
   const categoryDistributionOptions: ApexOptions = {
     chart: {
-      type: 'donut'
+      type: 'donut',
+      background: 'transparent'
     },
     colors: ['#4285F4', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'],
     labels: reportsData?.categoryDistribution?.labels || [],
     legend: {
-      position: 'bottom'
+      position: 'bottom',
+      labels: {
+        colors: chartTextColor
+      }
+    },
+    dataLabels: {
+      style: {
+        colors: [chartTextColor]
+      }
+    },
+    tooltip: {
+      theme: tooltipTheme
+    },
+    plotOptions: {
+      pie: {
+        donut: {
+          labels: {
+            show: true,
+            name: {
+              show: true,
+              color: chartTextColor
+            },
+            value: {
+              show: true,
+              color: chartTextColor
+            }
+          }
+        }
+      }
     }
   }
 

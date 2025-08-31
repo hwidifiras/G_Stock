@@ -39,6 +39,12 @@ export default function Dashboard() {
   const iconBoxBg = useColorModeValue("brand.500", "brand.400")
   const mainBg = useColorModeValue("gray.50", "navy.800")
   const mutedTextColor = useColorModeValue("secondaryGray.600", "secondaryGray.400")
+  
+  // Chart theme colors (actual hex values for ApexCharts)
+  const chartTextColor = useColorModeValue("#2D3748", "#FFFFFF")
+  const chartMutedColor = useColorModeValue("#718096", "#A0AEC0")
+  const gridColor = useColorModeValue("#e2e8f0", "#2D3748")
+  const tooltipTheme = useColorModeValue("light", "dark")
 
   // Fetch real analytics data
   const { data: dashboardData, loading: dashboardLoading, error: dashboardError } = useDashboardAnalytics()
@@ -53,6 +59,7 @@ export default function Dashboard() {
     chart: {
       type: 'line',
       toolbar: { show: false },
+      background: 'transparent'
     },
     colors: ['#22C55E', '#EF4444'],
     stroke: {
@@ -60,15 +67,34 @@ export default function Dashboard() {
       width: 3
     },
     xaxis: {
-      categories: movementsData?.categories || ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul']
+      categories: movementsData?.categories || ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul'],
+      labels: {
+        style: {
+          colors: chartMutedColor,
+          fontSize: '12px'
+        }
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: chartMutedColor,
+          fontSize: '12px'
+        }
+      }
     },
     tooltip: {
-      theme: 'light'
+      theme: tooltipTheme
     },
     grid: {
       show: true,
-      borderColor: '#e2e8f0',
+      borderColor: gridColor,
       strokeDashArray: 3
+    },
+    legend: {
+      labels: {
+        colors: chartTextColor
+      }
     }
   }
 
@@ -80,11 +106,32 @@ export default function Dashboard() {
   const categoryDistributionOptions: ApexOptions = {
     chart: {
       type: 'bar',
-      toolbar: { show: false }
+      toolbar: { show: false },
+      background: 'transparent'
     },
     colors: ['#4285F4'],
     xaxis: {
-      categories: dashboardData?.categoryDistribution?.map(cat => cat._id) || []
+      categories: dashboardData?.categoryDistribution?.map(cat => cat._id) || [],
+      labels: {
+        style: {
+          colors: chartMutedColor,
+          fontSize: '12px'
+        }
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors: chartMutedColor,
+          fontSize: '12px'
+        }
+      }
+    },
+    tooltip: {
+      theme: tooltipTheme
+    },
+    grid: {
+      borderColor: gridColor
     },
     plotOptions: {
       bar: {
@@ -103,17 +150,40 @@ export default function Dashboard() {
 
   const stockStatusOptions: ApexOptions = {
     chart: {
-      type: 'donut'
+      type: 'donut',
+      background: 'transparent'
     },
     colors: ['#22C55E', '#F59E0B', '#EF4444'],
     labels: ['En Stock', 'Stock Faible', 'Rupture'],
     legend: {
-      position: 'bottom'
+      position: 'bottom',
+      labels: {
+        colors: chartTextColor
+      }
+    },
+    dataLabels: {
+      style: {
+        colors: [chartTextColor]
+      }
+    },
+    tooltip: {
+      theme: tooltipTheme
     },
     plotOptions: {
       pie: {
         donut: {
-          size: '65%'
+          size: '65%',
+          labels: {
+            show: true,
+            name: {
+              show: true,
+              color: chartTextColor
+            },
+            value: {
+              show: true,
+              color: chartTextColor
+            }
+          }
         }
       }
     }
