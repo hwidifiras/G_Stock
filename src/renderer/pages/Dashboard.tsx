@@ -38,6 +38,7 @@ export default function Dashboard() {
   const cardBg = useColorModeValue("white", "navy.700")
   const iconBoxBg = useColorModeValue("brand.500", "brand.400")
   const mainBg = useColorModeValue("gray.50", "navy.800")
+  const mutedTextColor = useColorModeValue("secondaryGray.600", "secondaryGray.400")
 
   // Fetch real analytics data
   const { data: dashboardData, loading: dashboardLoading, error: dashboardError } = useDashboardAnalytics()
@@ -249,9 +250,9 @@ export default function Dashboard() {
                   height="100%"
                 />
               ) : (
-                <Flex h="100%" alignItems="center" justifyContent="center">
-                  <Text color="gray.500">Aucune donnée de mouvement disponible</Text>
-                </Flex>
+                                <Box textAlign="center">
+                  <Text color={mutedTextColor}>Aucune donnée de mouvement disponible</Text>
+                </Box>
               )}
             </Box>
           </Card>
@@ -270,7 +271,7 @@ export default function Dashboard() {
                 />
               ) : (
                 <Flex h="100%" alignItems="center" justifyContent="center">
-                  <Text color="gray.500">Aucune donnée de statut disponible</Text>
+                  <Text color={mutedTextColor}>Aucune donnée de statut disponible</Text>
                 </Flex>
               )}
             </Box>
@@ -298,7 +299,7 @@ export default function Dashboard() {
             />
           ) : (
             <Flex h="100%" alignItems="center" justifyContent="center">
-              <Text color="gray.500">Aucune donnée de catégorie disponible</Text>
+              <Text color={mutedTextColor}>Aucune donnée de catégorie disponible</Text>
             </Flex>
           )}
         </Box>

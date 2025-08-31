@@ -1,4 +1,4 @@
-import { Box, Button, Heading, Table, Thead, Tbody, Tr, Th, Td, HStack, useDisclosure, Badge, useColorModeValue, Spinner, Alert, AlertIcon, AlertTitle, AlertDescription, Text, Flex } from '@chakra-ui/react'
+import { Box, Button, Heading, Table, Thead, Tbody, Tr, Th, Td, HStack, useDisclosure, Badge, useColorModeValue, Spinner, Alert, AlertIcon, AlertTitle, AlertDescription, Flex } from '@chakra-ui/react'
 import { useState } from 'react'
 import Card from '../components/Card'
 import ProductForm from '../components/ProductForm'
@@ -8,6 +8,10 @@ import { Product } from '../services/api'
 export default function Products() {
   const { isOpen, onOpen, onClose } = useDisclosure()
   const [editingProduct, setEditingProduct] = useState<Product | undefined>()
+
+  // Color mode values
+  const textColor = useColorModeValue("secondaryGray.900", "white")
+  const mutedTextColor = useColorModeValue("secondaryGray.600", "secondaryGray.400")
 
   // Fetch products using React Query
   const { data: productsResponse, isLoading, error, refetch } = useProducts()
@@ -50,7 +54,6 @@ export default function Products() {
   }
 
   const cardBg = useColorModeValue('white', 'navy.700')
-  const textColor = useColorModeValue('gray.700', 'white')
 
   // Loading state
   if (isLoading) {
@@ -108,7 +111,7 @@ export default function Products() {
           <Tbody>
             {products.length === 0 ? (
               <Tr>
-                <Td colSpan={7} textAlign="center" py={8} color="gray.500">
+                <Td colSpan={7} textAlign="center" py={8} color={mutedTextColor}>
                   Aucun produit enregistré
                 </Td>
               </Tr>

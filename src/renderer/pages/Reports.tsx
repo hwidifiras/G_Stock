@@ -46,11 +46,13 @@ export default function Reports() {
   const [category, setCategory] = useState('all')
 
   // Fetch real analytics data
-  const { data: reportsData, loading, error, refetch } = useReportsAnalytics(dateRange, category)
+  const { data: reportsData, loading, error } = useReportsAnalytics(dateRange, category)
 
   const cardBg = useColorModeValue("white", "navy.700")
   const textColor = useColorModeValue("secondaryGray.900", "white")
   const borderColor = useColorModeValue("gray.200", "navy.600")
+  const mutedTextColor = useColorModeValue("secondaryGray.600", "secondaryGray.400")
+  const itemBg = useColorModeValue("gray.50", "navy.600")
 
   // Chart options using real data
   const inventoryValueOptions: ApexOptions = {
@@ -340,7 +342,7 @@ export default function Reports() {
               <Text fontSize="lg" fontWeight="bold" mb="20px" color={textColor}>
                 Inventaire détaillé par produit
               </Text>
-              <Text color="gray.500">
+              <Text color={mutedTextColor}>
                 Tableau détaillé des stocks avec valeurs, rotations et alertes...
               </Text>
               {/* Here you would add a detailed inventory table */}
@@ -362,7 +364,7 @@ export default function Reports() {
                     { name: 'iPad Pro', margin: '22%', color: 'yellow' },
                     { name: 'Galaxy S23', margin: '18%', color: 'red' }
                   ].map((product, index) => (
-                    <Flex key={index} justify="space-between" align="center" p="10px" bg="gray.50" rounded="md">
+                    <Flex key={index} justify="space-between" align="center" p="10px" bg={itemBg} rounded="md">
                       <Text fontWeight="500">{product.name}</Text>
                       <Badge colorScheme={product.color}>{product.margin}</Badge>
                     </Flex>
@@ -382,7 +384,7 @@ export default function Reports() {
                     { name: 'Tab S8 Ultra', days: '25 jours', color: 'yellow' },
                     { name: 'Studio Display', days: '22 jours', color: 'yellow' }
                   ].map((product, index) => (
-                    <Flex key={index} justify="space-between" align="center" p="10px" bg="gray.50" rounded="md">
+                    <Flex key={index} justify="space-between" align="center" p="10px" bg={itemBg} rounded="md">
                       <Text fontWeight="500">{product.name}</Text>
                       <Badge colorScheme={product.color}>{product.days}</Badge>
                     </Flex>

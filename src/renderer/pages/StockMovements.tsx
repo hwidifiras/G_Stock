@@ -27,12 +27,7 @@ import {
   Alert,
   AlertIcon,
   AlertTitle,
-  AlertDescription,
-  Stat,
-  StatLabel,
-  StatNumber,
-  StatHelpText,
-  StatArrow
+  AlertDescription
 } from '@chakra-ui/react'
 import { 
   MdAdd, 
@@ -70,6 +65,8 @@ export default function StockMovements() {
   const textColor = useColorModeValue("secondaryGray.900", "white")
   const borderColor = useColorModeValue("gray.200", "navy.600")
   const iconBoxBg = useColorModeValue("brand.500", "brand.400")
+  const mutedTextColor = useColorModeValue("secondaryGray.600", "secondaryGray.400")
+  const searchIconColor = useColorModeValue("secondaryGray.500", "secondaryGray.400")
 
   // Build filters for API
   const filters: MovementFilters = {
@@ -151,7 +148,6 @@ export default function StockMovements() {
   }
 
   const movements = movementsData?.data?.movements || []
-  const pagination = movementsData?.data?.pagination || {}
   const analytics = analyticsData?.data || {}
 
   // Calculate analytics summaries
@@ -357,7 +353,7 @@ export default function StockMovements() {
           <HStack spacing="20px" w="100%" flexWrap="wrap">
             <InputGroup maxW="300px">
               <InputLeftElement pointerEvents="none">
-                <Icon as={MdSearch} color="gray.300" />
+                <Icon as={MdSearch} color={searchIconColor} />
               </InputLeftElement>
               <Input
                 placeholder="Rechercher un mouvement..."
@@ -395,7 +391,7 @@ export default function StockMovements() {
             </Button>
           </HStack>
           
-          <Text fontSize="sm" color="gray.500">
+          <Text fontSize="sm" color={mutedTextColor}>
             {movements.length} mouvement(s) trouvé(s)
           </Text>
         </VStack>
@@ -425,7 +421,7 @@ export default function StockMovements() {
                       <Text fontSize="sm" fontWeight="500">
                         {formatDate(movement.movementDate).split(' ')[0]}
                       </Text>
-                      <Text fontSize="xs" color="gray.500">
+                      <Text fontSize="xs" color={mutedTextColor}>
                         {formatDate(movement.movementDate).split(' ')[1]}
                       </Text>
                     </VStack>
@@ -447,7 +443,7 @@ export default function StockMovements() {
                       <Text fontSize="sm" fontWeight="500">
                         {movement.product.name}
                       </Text>
-                      <Text fontSize="xs" color="gray.500">
+                      <Text fontSize="xs" color={mutedTextColor}>
                         {movement.product.reference}
                       </Text>
                     </VStack>
@@ -470,7 +466,7 @@ export default function StockMovements() {
                     <VStack align="start" spacing="1px">
                       <Text fontSize="sm">{movement.reason}</Text>
                       {movement.reference && (
-                        <Text fontSize="xs" color="gray.500">
+                        <Text fontSize="xs" color={mutedTextColor}>
                           Réf: {movement.reference}
                         </Text>
                       )}
@@ -507,7 +503,7 @@ export default function StockMovements() {
         
         {movements.length === 0 && (
           <Box textAlign="center" py="40px">
-            <Text color="gray.500">Aucun mouvement trouvé</Text>
+            <Text color={mutedTextColor}>Aucun mouvement trouvé</Text>
           </Box>
         )}
       </Card>

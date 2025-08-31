@@ -6,11 +6,11 @@ export const theme = extendTheme({
     body: `'Inter', sans-serif`,
   },
   styles: {
-    global: {
+    global: (props: any) => ({
       body: {
-        bg: 'gray.50',
+        bg: props.colorMode === 'dark' ? 'navy.900' : 'gray.50',
       },
-    },
+    }),
   },
   colors: {
     brand: {

@@ -1,5 +1,1 @@
-"use strict";
-const electron = require("electron");
-electron.contextBridge.exposeInMainWorld("database", {
-  // Add database methods here when needed
-});
+"use strict";const e=require("electron");e.contextBridge.exposeInMainWorld("database",{});

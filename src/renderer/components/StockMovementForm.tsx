@@ -10,7 +10,6 @@ import {
   VStack,
   HStack,
   Select,
-  Textarea,
   Input,
   NumberInput,
   NumberInputField,
@@ -20,9 +19,8 @@ import {
   FormControl,
   FormLabel,
   FormErrorMessage,
-  useToast,
-  Text,
-  Badge
+  useColorModeValue,
+  Text
 } from '@chakra-ui/react'
 import { useState, useEffect } from 'react'
 import { useProducts } from '../hooks/useProducts'
@@ -39,7 +37,8 @@ export default function StockMovementForm({
   onClose, 
   movement 
 }: StockMovementFormProps) {
-  const toast = useToast()
+  // Color theme
+  const mutedTextColor = useColorModeValue('secondaryGray.600', 'secondaryGray.400')
   
   // Fetch products for dropdown
   const { data: productsResponse } = useProducts()
@@ -98,7 +97,7 @@ export default function StockMovementForm({
     }
 
     if (formData.type === 'exit') {
-      const product = products.find(p => p.id === formData.productId)
+      const product = products.find(p => p._id === formData.productId)
       if (product && Math.abs(formData.quantity) > product.quantity) {
         newErrors.quantity = `Stock insuffisant (disponible: ${product.quantity})`
       }
@@ -168,19 +167,8 @@ export default function StockMovementForm({
   }
 
   const getSelectedProductStock = () => {
-    const product = products.find(p => p.id === formData.productId)
+    const product = products.find(p => p._id === formData.productId)
     return product?.quantity || 0
-  }
-
-  const getReasonPlaceholder = () => {
-    switch (formData.type) {
-      case 'entry':
-        return 'Ex: Réapprovisionnement fournisseur, Retour client...'
-      case 'exit':
-        return 'Ex: Vente, Casse, Vol, Échantillon...'
-      default:
-        return 'Ex: Correction inventaire, Perte, Détérioration...'
-    }
   }
 
   return (
@@ -219,15 +207,15 @@ export default function StockMovementForm({
                 placeholder="Sélectionnez un produit"
               >
                 {products.map(product => (
-                  <option key={product.id} value={product.id}>
+                  <option key={product._id} value={product._id}>
                     {product.name} (Stock: {product.quantity})
                   </option>
                 ))}
               </Select>
               {formData.productId && (
-                <Text fontSize="sm" color="gray.600" mt={1}>
+                <Text fontSize="sm" color={mutedTextColor} mt={1}>
                   Stock actuel: {getSelectedProductStock()} • 
-                  Catégorie: {products.find(p => p.id === formData.productId)?.category}
+                  Catégorie: {products.find(p => p._id === formData.productId)?.category}
                 </Text>
               )}
               <FormErrorMessage>{errors.productId}</FormErrorMessage>

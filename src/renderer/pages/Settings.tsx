@@ -33,7 +33,6 @@ import Card from '../components/Card'
 import {
   useSettings,
   useUpdateSettings,
-  useUpdateSettingsSection,
   useResetSettings,
   useExportSettings,
   useImportSettings,
@@ -44,12 +43,15 @@ import {
 
 export default function Settings() {
   const toast = useToast()
-  const { colorMode, setColorMode } = useColorMode()
+  const { setColorMode } = useColorMode()
+  
+  // Color mode values
+  const textColor = useColorModeValue("secondaryGray.900", "white")
+  const mutedTextColor = useColorModeValue("secondaryGray.600", "secondaryGray.400")
   
   // API hooks
   const { data: settingsData, isLoading, error } = useSettings()
   const updateSettingsMutation = useUpdateSettings()
-  const updateSectionMutation = useUpdateSettingsSection()
   const resetSettingsMutation = useResetSettings()
   const exportSettingsMutation = useExportSettings()
   const importSettingsMutation = useImportSettings()
@@ -159,7 +161,6 @@ export default function Settings() {
   }
 
   const cardBg = useColorModeValue("white", "navy.700")
-  const textColor = useColorModeValue("secondaryGray.900", "white")
   const borderColor = useColorModeValue("gray.200", "navy.600")
 
   // Loading state
@@ -487,7 +488,7 @@ export default function Settings() {
             <HStack justify="space-between">
               <VStack align="start" spacing="2px">
                 <Text fontWeight="500">Réapprovisionnement automatique</Text>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color={mutedTextColor}>
                   Activer les commandes automatiques quand le stock est faible
                 </Text>
               </VStack>
@@ -501,7 +502,7 @@ export default function Settings() {
             <HStack justify="space-between">
               <VStack align="start" spacing="2px">
                 <Text fontWeight="500">Suivi des dates d'expiration</Text>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color={mutedTextColor}>
                   Suivre les dates d'expiration des produits
                 </Text>
               </VStack>
@@ -515,7 +516,7 @@ export default function Settings() {
             <HStack justify="space-between">
               <VStack align="start" spacing="2px">
                 <Text fontWeight="500">Suivi des numéros de série</Text>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color={mutedTextColor}>
                   Suivre les numéros de série individuels
                 </Text>
               </VStack>
@@ -529,7 +530,7 @@ export default function Settings() {
             <HStack justify="space-between">
               <VStack align="start" spacing="2px">
                 <Text fontWeight="500">Autoriser stock négatif</Text>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color={mutedTextColor}>
                   Permettre les ventes même avec un stock insuffisant
                 </Text>
               </VStack>
@@ -552,7 +553,7 @@ export default function Settings() {
             <HStack justify="space-between">
               <VStack align="start" spacing="2px">
                 <Text fontWeight="500">Alertes de stock</Text>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color={mutedTextColor}>
                   Recevoir des notifications pour les stocks faibles
                 </Text>
               </VStack>
@@ -568,7 +569,7 @@ export default function Settings() {
             <HStack justify="space-between">
               <VStack align="start" spacing="2px">
                 <Text fontWeight="500">Notifications email</Text>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color={mutedTextColor}>
                   Recevoir des notifications par email
                 </Text>
               </VStack>
@@ -582,7 +583,7 @@ export default function Settings() {
             <HStack justify="space-between">
               <VStack align="start" spacing="2px">
                 <Text fontWeight="500">Notifications SMS</Text>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color={mutedTextColor}>
                   Recevoir des notifications par SMS
                 </Text>
               </VStack>
@@ -598,7 +599,7 @@ export default function Settings() {
             <HStack justify="space-between">
               <VStack align="start" spacing="2px">
                 <Text fontWeight="500">Rapports quotidiens</Text>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color={mutedTextColor}>
                   Recevoir un résumé quotidien par email
                 </Text>
               </VStack>
@@ -612,7 +613,7 @@ export default function Settings() {
             <HStack justify="space-between">
               <VStack align="start" spacing="2px">
                 <Text fontWeight="500">Rapports hebdomadaires</Text>
-                <Text fontSize="sm" color="gray.500">
+                <Text fontSize="sm" color={mutedTextColor}>
                   Recevoir un résumé hebdomadaire par email
                 </Text>
               </VStack>
@@ -658,7 +659,7 @@ export default function Settings() {
 
         {/* Save Button */}
         <HStack justify="space-between" pt="4">
-          <Text fontSize="sm" color="gray.500">
+          <Text fontSize="sm" color={mutedTextColor}>
             Modifié par: {formData.updatedBy || 'Système'}
           </Text>
           

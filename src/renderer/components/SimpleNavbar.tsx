@@ -14,6 +14,7 @@ export default function SimpleNavbar({
   const navbarBg = useColorModeValue('rgba(244, 247, 254, 0.2)', 'rgba(11,20,55,0.5)')
   const textColor = useColorModeValue('navy.700', 'white')
   const borderColor = useColorModeValue('gray.200', 'whiteAlpha.300')
+  const mutedTextColor = useColorModeValue('secondaryGray.600', 'secondaryGray.400')
 
   return (
     <Box
@@ -36,7 +37,7 @@ export default function SimpleNavbar({
       >
         {/* Breadcrumb */}
         <Box>
-          <Text fontSize="sm" color="gray.500" mb={1}>
+          <Text fontSize="sm" color={mutedTextColor} mb={1}>
             Pages
           </Text>
           <Text fontSize="lg" fontWeight="bold" color={textColor}>

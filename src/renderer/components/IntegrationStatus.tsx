@@ -31,6 +31,7 @@ export const IntegrationStatus: React.FC<IntegrationStatusProps> = ({
   const bgColor = useColorModeValue('white', 'navy.700')
   const borderColor = useColorModeValue('gray.200', 'navy.600')
   const textColor = useColorModeValue('secondaryGray.900', 'white')
+  const mutedTextColor = useColorModeValue('secondaryGray.600', 'secondaryGray.400')
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -102,7 +103,7 @@ export const IntegrationStatus: React.FC<IntegrationStatusProps> = ({
           size="md"
         />
 
-        <Text fontSize="sm" color="gray.500">
+        <Text fontSize="sm" color={mutedTextColor}>
           {integration.summary}
         </Text>
 
@@ -122,7 +123,7 @@ export const IntegrationStatus: React.FC<IntegrationStatusProps> = ({
                 </HStack>
                 
                 <HStack spacing="2">
-                  <Text fontSize="xs" color="gray.500">
+                  <Text fontSize="xs" color={mutedTextColor}>
                     {module.progress}%
                   </Text>
                   <Badge 
